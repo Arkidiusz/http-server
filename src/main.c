@@ -41,6 +41,11 @@ int main(void)
             printf("accepted socket: %d\n", clientSocket);
         }
 
+        char buffer[4096 + 1];
+        size_t received = recv(clientSocket, buffer, sizeof(buffer), 0);
+        buffer[4096] = 0x00;
+        printf("received: \n%s", buffer);
+
         // send an http response to the client
         const char *http_response =
             "HTTP/1.1 200 OK\r\n"
