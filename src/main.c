@@ -12,8 +12,27 @@ int main(void)
     int bindResult = bind(serverSocket, &serverSocketAddress, sizeof(serverSocketAddress));
     if (bindResult == -1)
     {
-        printf("binding address to the server socket has failed\n");
+        printf("bind has failed\n");
         return -1;
+    }
+
+    // mark socket to be accepting incoming connections
+    int listenResult = listen(serverSocket, 2137);
+    if (listenResult == -1)
+    {
+        printf("listen has failed\n");
+    }
+
+    // accept connections
+    while (1==1)
+    {
+        struct sockaddr clientSocketAddress;
+        socklen_t clientSocketAddressSize = sizeof(clientSocketAddress);
+        int clientSocket = accept(serverSocket, &clientSocketAddress, &clientSocketAddressSize);
+        if (clientSocket == -1)
+        {
+            printf("accept has failed\n");
+        }
     }
 
     printf("http-server has closed\n");
