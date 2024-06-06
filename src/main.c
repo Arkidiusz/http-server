@@ -5,6 +5,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <errno.h>
 
 struct clientNode
 {
@@ -81,6 +82,7 @@ int main(void)
         struct clientNode *client = clientList;
         while (client != NULL)
         {
+            clientSocket = (*client).socket;
             printf("checking client %d...\n", (*client).socket);
             //recieve an https requestq
             char buffer[4096 + 1];
@@ -93,39 +95,49 @@ int main(void)
             else
             {
                 printf("havent received any data\n");
+                if (errno == EWOULDBLOCK) {
+                    printf("EWOULDBLOCK\n");
+                    // send an http response
+                    const char *http_response =
+                        "HTTP/1.1 200 OK\r\n"
+                        "Date: Mon, 23 May 2005 22:38:34 GMT\r\n"
+                        "Content-Type: text/html; charset=UTF-8\r\n"
+                        "Content-Length: 155\r\n"
+                        "Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\r\n"
+                        "Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\r\n"
+                        "ETag: \"3f80f-1b6-3e1cb03b\"\r\n"
+                        "Accept-Ranges: bytes\r\n"
+                        "Connection: close\r\n\r\n"
+                        "<html>\r\n"
+                        "  <head>\r\n"
+                        "    <title>An Example Page</title>\r\n"
+                        "  </head>\r\n"
+                        "  <body>\r\n"
+                        "    <p>Hello World, this is a very simple HTML document.</p>\r\n"
+                        "  </body>\r\n"
+                        "</html>";
+                    int sendResult = send(clientSocket, http_response, strlen(http_response), 0);
+                    if (sendResult == -1)
+                    {
+                        printf("havent sent any data\n");
+                        if (errno == EWOULDBLOCK) {
+                            printf("EWOULDBLOCK\n");
+                        } else {
+                            printf("monkaS\n");
+                        }
+                    }
+                    else
+                    {
+                        printf("sent %d bytes to the client %d\n", sendResult, clientSocket);
+                    }
+
+                } else {
+                    perror("monkaS\n");
+                }
             }
             
 
             client = (*client).next;
-
-                    // send an http response
-            const char *http_response =
-                "HTTP/1.1 200 OK\r\n"
-                "Date: Mon, 23 May 2005 22:38:34 GMT\r\n"
-                "Content-Type: text/html; charset=UTF-8\r\n"
-                "Content-Length: 155\r\n"
-                "Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\r\n"
-                "Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\r\n"
-                "ETag: \"3f80f-1b6-3e1cb03b\"\r\n"
-                "Accept-Ranges: bytes\r\n"
-                "Connection: close\r\n\r\n"
-                "<html>\r\n"
-                "  <head>\r\n"
-                "    <title>An Example Page</title>\r\n"
-                "  </head>\r\n"
-                "  <body>\r\n"
-                "    <p>Hello World, this is a very simple HTML document.</p>\r\n"
-                "  </body>\r\n"
-                "</html>";
-            int sendResult = send(clientSocket, http_response, strlen(http_response), 0);
-            if (sendResult == -1)
-            {
-                printf("havent sent any data\n");
-            }
-            else
-            {
-                printf("sent %d bytes to the client %d\n", sendResult, clientSocket);
-            }
         }
 
         sleep(3);
