@@ -1,2 +1,2 @@
 # http-server
-An http server implementation using standard C libraries
+An http server implementation for linux using standard C libraries

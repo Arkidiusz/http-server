@@ -4,6 +4,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <stdlib.h>
+
+struct clientNode
+{
+    int socket;
+    struct clientNode *next;
+};
 
 int main(void)
 {
@@ -19,32 +26,68 @@ int main(void)
         return -1;
     }
 
-    fcntl(serverSocket, F_SETFL, O_NONBLOCK); // set non-blocking io for accept()
+    int fcntlResult = fcntl(serverSocket, F_SETFL, O_NONBLOCK); // set non-blocking io for accept()
+    if (fcntlResult == -1)
+    {
+        printf("fcntl for serverSocket has failed\n");
+        return -1;
+    }
 
     // mark socket to be accepting incoming connections
     int listenResult = listen(serverSocket, 2137);
     if (listenResult == -1)
     {
         printf("listen has failed\n");
+        return -1;
     }
 
+    struct clientNode *clientList = NULL;
+    int counter = 0;
     while (1 == 1)
     {
+        printf("\ncounter index = %d\n", counter);
         printf("\nattempting to accept a client\n");
         struct sockaddr clientSocketAddress;
         socklen_t clientSocketAddressSize = sizeof(clientSocketAddress);
         int clientSocket = accept(serverSocket, &clientSocketAddress, &clientSocketAddressSize);
-        if (clientSocket == -1)
-        {
-            printf("accept has failed\n");
-        }
-        else
+        if (clientSocket != -1)
         {
             printf("accepted socket: %d\n", clientSocket);
-            return 0;
+
+            int fcntlResult = fcntl(serverSocket, F_SETFL, O_NONBLOCK); // set non-blocking io for recv and send
+            if (fcntlResult == -1)
+            {
+                printf("fcntl for clientSocket has failed\n");
+            }
+            else if (clientList == NULL)
+            {
+                printf("clist = NULL\n");
+                struct clientNode *node = malloc(sizeof(struct clientNode));
+                (*node).socket = clientSocket;
+                (*node).next = NULL;
+                clientList = node;
+            }
+            else
+            {
+                printf("clist = NOT NULL\n");
+                struct clientNode *node = malloc(sizeof(struct clientNode));
+                (*node).socket = clientSocket;
+                (*node).next = clientList;
+                clientList = node;
+            }
         }
 
-        // // recieve an https request
+        printf("iterating over all clients...\n");
+        struct clientNode *client = clientList;
+        while (client != NULL)
+        {
+            printf("checking client %d...\n", (*client).socket);
+            client = (*client).next;
+        }
+
+
+
+        // recieve an https requestq
         // char buffer[4096 + 1];
         // size_t received = recv(clientSocket, buffer, sizeof(buffer), 0);
         // buffer[4096] = 0x00;
@@ -80,6 +123,9 @@ int main(void)
         //     close(clientSocket);
         //     return 0;
         // }
+        
+        sleep(3);
+        counter += 1;
     }
 
     printf("http-server has closed\n");
