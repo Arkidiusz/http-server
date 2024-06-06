@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 int main(void)
 {
@@ -18,6 +19,8 @@ int main(void)
         return -1;
     }
 
+    fcntl(serverSocket, F_SETFL, O_NONBLOCK); // set non-blocking io for accept()
+
     // mark socket to be accepting incoming connections
     int listenResult = listen(serverSocket, 2137);
     if (listenResult == -1)
@@ -25,7 +28,6 @@ int main(void)
         printf("listen has failed\n");
     }
 
-    // accept connections
     while (1 == 1)
     {
         printf("\nattempting to accept a client\n");
@@ -39,43 +41,45 @@ int main(void)
         else
         {
             printf("accepted socket: %d\n", clientSocket);
-        }
-
-        char buffer[4096 + 1];
-        size_t received = recv(clientSocket, buffer, sizeof(buffer), 0);
-        buffer[4096] = 0x00;
-        printf("received: \n%s", buffer);
-
-        // send an http response to the client
-        const char *http_response =
-            "HTTP/1.1 200 OK\r\n"
-            "Date: Mon, 23 May 2005 22:38:34 GMT\r\n"
-            "Content-Type: text/html; charset=UTF-8\r\n"
-            "Content-Length: 155\r\n"
-            "Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\r\n"
-            "Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\r\n"
-            "ETag: \"3f80f-1b6-3e1cb03b\"\r\n"
-            "Accept-Ranges: bytes\r\n"
-            "Connection: close\r\n\r\n"
-            "<html>\r\n"
-            "  <head>\r\n"
-            "    <title>An Example Page</title>\r\n"
-            "  </head>\r\n"
-            "  <body>\r\n"
-            "    <p>Hello World, this is a very simple HTML document.</p>\r\n"
-            "  </body>\r\n"
-            "</html>";
-        int sendResult = send(clientSocket, http_response, strlen(http_response), 0);
-        if (sendResult == -1)
-        {
-            printf("send has failed\n");
-        }
-        else
-        {
-            printf("sent %d bytes to the client %d\n", sendResult, clientSocket);
-            close(clientSocket);
             return 0;
         }
+
+        // // recieve an https request
+        // char buffer[4096 + 1];
+        // size_t received = recv(clientSocket, buffer, sizeof(buffer), 0);
+        // buffer[4096] = 0x00;
+        // printf("received: \n%s", buffer);
+
+        // // send an http response
+        // const char *http_response =
+        //     "HTTP/1.1 200 OK\r\n"
+        //     "Date: Mon, 23 May 2005 22:38:34 GMT\r\n"
+        //     "Content-Type: text/html; charset=UTF-8\r\n"
+        //     "Content-Length: 155\r\n"
+        //     "Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\r\n"
+        //     "Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\r\n"
+        //     "ETag: \"3f80f-1b6-3e1cb03b\"\r\n"
+        //     "Accept-Ranges: bytes\r\n"
+        //     "Connection: close\r\n\r\n"
+        //     "<html>\r\n"
+        //     "  <head>\r\n"
+        //     "    <title>An Example Page</title>\r\n"
+        //     "  </head>\r\n"
+        //     "  <body>\r\n"
+        //     "    <p>Hello World, this is a very simple HTML document.</p>\r\n"
+        //     "  </body>\r\n"
+        //     "</html>";
+        // int sendResult = send(clientSocket, http_response, strlen(http_response), 0);
+        // if (sendResult == -1)
+        // {
+        //     printf("send has failed\n");
+        // }
+        // else
+        // {
+        //     printf("sent %d bytes to the client %d\n", sendResult, clientSocket);
+        //     close(clientSocket);
+        //     return 0;
+        // }
     }
 
     printf("http-server has closed\n");
