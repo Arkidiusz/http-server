@@ -83,14 +83,14 @@ int main(void)
         while (client != NULL)
         {
             clientSocket = (*client).socket;
-            printf("checking client %d...\n", (*client).socket);
-            //recieve an https requestq
+            printf("checking client %d...\n", clientSocket);
+            //recieve an https request
             char buffer[4096 + 1];
             size_t received = recv(clientSocket, buffer, sizeof(buffer), 0);
             if (received != -1)
             {
                 buffer[4096] = 0x00;
-                printf("received: \n%s\n", buffer);
+                printf("received:\n%s\n", buffer);
             }
             else
             {
@@ -129,14 +129,25 @@ int main(void)
                     else
                     {
                         printf("sent %d bytes to the client %d\n", sendResult, clientSocket);
+
+                        // close the client
+                        printf("attempting to close socket '%d'\n", clientSocket);
+                        int closeResult = close(clientSocket);
+                        if (closeResult == -1)
+                        {
+                            printf("failed to close the socket '%d'\n", clientSocket);
+                        }
+                        else
+                        {
+                            printf("closed socket '%d'\n", clientSocket);
+                        }
                     }
 
                 } else {
-                    perror("monkaS\n");
+                    printf("monkaS\n");
                 }
             }
             
-
             client = (*client).next;
         }
 
